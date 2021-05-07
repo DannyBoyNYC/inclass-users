@@ -2,6 +2,7 @@ import React from "react";
 import { render } from "react-dom";
 
 import "./styles.css";
+import cat from "./cat.jpg";
 
 const App = () => {
   const [users, setUsers] = React.useState([]);
@@ -21,11 +22,14 @@ const App = () => {
   }
 
   return (
-    <ul>
-      {users.map((user) => {
-        return <li key={user.id}>{user.name}</li>;
-      })}
-    </ul>
+    <>
+      <img style={{ maxWidth: "320px" }} src={cat} alt="funny cat" />
+      <ul>
+        {users.map((user) => {
+          return <li key={user.id}>{user.name}</li>;
+        })}
+      </ul>
+    </>
   );
 };
 

@@ -12,7 +12,7 @@ app.get("/", (req, res, next) =>
 
 app.get("/api/users", async (req, res, next) => {
   try {
-    res.send(await userInfo.findAll());
+    res.send(await User.findAll());
   } catch (ex) {
     next(ex);
   }
@@ -22,7 +22,7 @@ const init = async () => {
   try {
     await syncAndSeed();
     const port = process.env.PORT || 3000;
-    app.listen(port, () => console.log(`listening on ${port}`));
+    app.listen(port, () => console.log(`listening on port ${port}`));
   } catch (ex) {
     console.log(ex);
   }
@@ -37,7 +37,6 @@ const conn = new Sequelize(
 const User = conn.define("user", {
   name: STRING,
 });
-
 const syncAndSeed = async () => {
   await conn.sync({ force: true });
   await Promise.all([

@@ -1,6 +1,8 @@
 import React from "react";
 import { render } from "react-dom";
 
+import "./styles.css";
+
 const App = () => {
   const [users, setUsers] = React.useState([]);
   const [loading, setLoading] = React.useState(true);

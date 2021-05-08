@@ -7,15 +7,17 @@ An app that maintains a list of users.
 - sequelize
 - postgres
 - express
+- react
 
 mkdir fullstackdemo
 npm init -y
 
 https://gist.github.com/DannyBoyNYC/12ed25aed343d0b5d3d819ac070d8ca6
 
-.gitignore :
+.gitignore:
 
 ```js
+$ touch .gitignore
 $ echo node_modules >> .gitignore
 ```
 
@@ -517,3 +519,367 @@ Add a start command to package:
 ```
 
 Push to Github and create a Heroku account.
+
+## Redux
+
+### Pub Sub
+
+```html
+<html>
+  <head>
+    <!-- <script src="/dist/main.js" defer></script> -->
+  </head>
+  <body>
+    <h1>Users</h1>
+    <div id="root"></div>
+    <h2>Counter</h2>
+    <div id="count"></div>
+  </body>
+  <script>
+    const renderCounter = (count) => {
+      const html = `<h3>The count is ${count}</h3>`;
+      document.querySelector("#count").innerHTML = html;
+    };
+    let count = 0;
+    renderCounter(count);
+  </script>
+</html>
+```
+
+```js
+const renderCounter = (count) => {
+  const html = `<h3>The count is ${count}</h3>`;
+  document.querySelector("#count").innerHTML = html;
+};
+let count = 0;
+renderCounter(count);
+
+setInterval(() => {
+  count = count + 1;
+  renderCounter(count);
+}, 1000);
+```
+
+### Store
+
+Subscribers and state
+
+Pub and sub to it.
+
+```js
+const renderCounter = (count) => {
+  const html = `<h3>The count is ${count}</h3>`;
+  document.querySelector("#count").innerHTML = html;
+};
+
+const store = {
+  state: 0,
+  listeners: [],
+  dispatch: function (newState) {
+    this.state = newState;
+  },
+};
+
+renderCounter(store.state);
+
+setInterval(() => {
+  store.dispatch(store.state + 1);
+  renderCounter(store.state);
+}, 1000);
+```
+
+Add an array of listeners for subscribers
+
+```js
+const renderCounter = (count) => {
+  const html = `<h3>The count is ${count}</h3>`;
+  document.querySelector("#count").innerHTML = html;
+};
+
+const store = {
+  state: 0,
+  listeners: [],
+  dispatch: function (newState) {
+    this.state = newState;
+    this.listeners.forEach((listener) => {
+      listener();
+    });
+  },
+  subscribe: function (listener) {
+    this.listeners.push(listener);
+  },
+};
+
+// renderCounter(store.state);
+store.subscribe(() => {
+  renderCounter(store.state);
+});
+
+setInterval(() => {
+  store.dispatch(store.state + 1);
+  // renderCounter(store.state);
+}, 1000);
+```
+
+Add multiple subscribers:
+
+```js
+const renderCounter = (count) => {
+  const html = `<h3>The count is ${count}</h3>`;
+  document.querySelector("#count").innerHTML = html;
+};
+
+const store = {
+  state: 0,
+  listeners: [],
+  dispatch: function (newState) {
+    this.state = newState;
+    this.listeners.forEach((listener) => {
+      listener();
+    });
+  },
+  subscribe: function (listener) {
+    this.listeners.push(listener);
+  },
+  logListeners: function () {
+    console.log(" listeners ", this.listeners);
+  },
+};
+
+store.subscribe(() => {
+  renderCounter(store.state);
+});
+
+store.subscribe(() => {
+  console.log(" the store has changed ");
+});
+
+setInterval(() => {
+  store.dispatch(store.state + 1);
+  store.logListeners();
+}, 1000);
+```
+
+Unsubscribing
+
+```js
+const countEl = document.querySelector("#count");
+
+const renderCounter = (count) => {
+  const html = `<h3>The count is ${count}</h3>`;
+  countEl.innerHTML = html;
+};
+
+countEl.addEventListener("click", () => {
+  console.log(" clicked ");
+});
+
+const store = {
+  state: 0,
+  listeners: [],
+  dispatch: function (newState) {
+    this.state = newState;
+    this.listeners.forEach((listener) => {
+      listener();
+    });
+  },
+  subscribe: function (listener) {
+    this.listeners.push(listener);
+    // return a function that allows you to unsub
+    return () => {
+      this.listeners = this.listeners.filter(
+        (_listener) => _listener !== listener
+      );
+    };
+  },
+  logListeners: function () {
+    console.log(" listeners ", this.listeners);
+  },
+};
+
+const unsubscribe = store.subscribe(() => {
+  renderCounter(store.state);
+});
+console.log(" unsubscribe ", unsubscribe);
+
+store.subscribe(() => {
+  console.log(" the store has changed ");
+});
+
+setInterval(() => {
+  store.dispatch(store.state + 1);
+  store.logListeners();
+}, 1000);
+```
+
+Add the unsub to the click listener
+
+```js
+const countEl = document.querySelector("#count");
+
+const renderCounter = (count) => {
+  const html = `<h3>The count is ${count}</h3>`;
+  countEl.innerHTML = html;
+};
+
+countEl.addEventListener("click", () => {
+  unsubscribe();
+});
+
+const store = {
+  state: 0,
+  listeners: [],
+  dispatch: function (newState) {
+    this.state = newState;
+    this.listeners.forEach((listener) => {
+      listener();
+    });
+  },
+  subscribe: function (listener) {
+    this.listeners.push(listener);
+    return () => {
+      this.listeners = this.listeners.filter(
+        (_listener) => _listener !== listener
+      );
+    };
+  },
+};
+
+const unsubscribe = store.subscribe(() => {
+  renderCounter(store.state);
+});
+
+store.subscribe(() => {
+  console.log(" the store has changed ");
+});
+
+setInterval(() => {
+  store.dispatch(store.state + 1);
+}, 1000);
+```
+
+Note the use of 'this' in the unsub function.
+
+We have closure here so the 'this' points to the 'this' in the object when it is returned.
+
+Try:
+
+```js
+dispatch: (newState) => {
+    this.state = newState;
+    this.listeners.forEach((listener) => {
+      listener();
+    });
+  },
+```
+
+Rollback and try:
+
+```js
+return function () {
+  this.listeners = this.listeners.filter((_listener) => _listener !== listener);
+};
+```
+
+## Redux
+
+https://cdnjs.com/ - full version
+
+```html
+<script
+  src="https://cdnjs.cloudflare.com/ajax/libs/redux/4.1.0/redux.js"
+  integrity="sha512-tqb5l5obiKEPVwTQ5J8QJ1qYaLt+uoXe1tbMwQWl6gFCTJ5OMgulwIb3l2Lu7uBqdlzRf5yBOAuLL4+GkqbPPw=="
+  crossorigin="anonymous"
+></script>
+```
+
+`console.log(" ", Redux);`
+
+```js
+const store = Redux.createStore();
+
+// const store = {
+//   state: 0,
+//   listeners: [],
+//   dispatch: function (newState) {
+//     this.state = newState;
+//     this.listeners.forEach((listener) => {
+//       listener();
+//     });
+//   },
+//   subscribe: function (listener) {
+//     this.listeners.push(listener);
+//     return () => {
+//       this.listeners = this.listeners.filter(
+//         (_listener) => _listener !== listener
+//       );
+//     };
+//   },
+// };
+
+// const unsubscribe = store.subscribe(() => {
+//   renderCounter(store.state);
+// });
+
+// store.subscribe(() => {
+//   console.log(" the store has changed ");
+// });
+
+setInterval(() => {
+  // store.dispatch(store.state + 1);
+}, 1000);
+```
+
+```js
+const store = Redux.createStore(() => {
+  return "foo";
+});
+
+console.log(" redux state ", store.getState());
+```
+
+```js
+const store = Redux.createStore((state = 0, action) => {
+  return state;
+});
+```
+
+```js
+const countEl = document.querySelector("#count");
+
+const renderCounter = (count) => {
+  const html = `<h3>The count is ${count}</h3>`;
+  countEl.innerHTML = html;
+};
+
+countEl.addEventListener("click", () => {
+  unsubscribe();
+});
+
+const store = Redux.createStore((state = 0, action) => {
+  if (action.type === "INC") {
+    return (state = state + 1);
+  }
+  return state;
+});
+
+// const unsubscribe = store.subscribe(() => {
+//   renderCounter(store.state);
+// });
+
+store.subscribe(() => {
+  console.log(" the store has changed ");
+});
+
+setInterval(() => {
+  store.dispatch({ type: "INC" });
+}, 1000);
+```
+
+Removed code. We are only responsible for describing how the store is gong to change based on the action type.
+
+```js
+const unsubscribe = store.subscribe(() => {
+  renderCounter(store.getState());
+});
+```

@@ -218,6 +218,7 @@ app.use("/dist", static(path.join(__dirname, "../dist")));
 res.sendFile(path.join(__dirname, "../index.html"))
 ```
 
+<!--
 2. Duplicate server/index.js as db.js and edit:
 
 ```js
@@ -520,15 +521,15 @@ Add a start command to package:
 
 Push to Github and create a Heroku account.
 
+-->
+
 ## Redux
 
-### Pub Sub
+### PubSub
 
 ```html
 <html>
-  <head>
-    <!-- <script src="/dist/main.js" defer></script> -->
-  </head>
+  <head></head>
   <body>
     <h1>Users</h1>
     <div id="root"></div>
@@ -552,6 +553,7 @@ const renderCounter = (count) => {
   document.querySelector("#count").innerHTML = html;
 };
 let count = 0;
+
 renderCounter(count);
 
 setInterval(() => {
@@ -566,12 +568,15 @@ Subscribers and state
 
 Pub and sub to it.
 
-```js
-const renderCounter = (count) => {
+```js const
+renderCounter = (count) => {
   const html = `<h3>The count is ${count}</h3>`;
   document.querySelector("#count").innerHTML = html;
 };
 
+// let count = 0;
+
+// NEW
 const store = {
   state: 0,
   listeners: [],
@@ -580,9 +585,12 @@ const store = {
   },
 };
 
+// renderCounter(count);
 renderCounter(store.state);
 
 setInterval(() => {
+  // count = count + 1;
+  // renderCounter(count);
   store.dispatch(store.state + 1);
   renderCounter(store.state);
 }, 1000);
@@ -641,6 +649,7 @@ const store = {
   subscribe: function (listener) {
     this.listeners.push(listener);
   },
+  // Log the listeners
   logListeners: function () {
     console.log(" listeners ", this.listeners);
   },
@@ -650,17 +659,19 @@ store.subscribe(() => {
   renderCounter(store.state);
 });
 
+// multiple subscriptions
 store.subscribe(() => {
   console.log(" the store has changed ");
 });
 
 setInterval(() => {
   store.dispatch(store.state + 1);
+  // NEW
   store.logListeners();
 }, 1000);
 ```
 
-Unsubscribing
+Unsubscribing:
 
 ```js
 const countEl = document.querySelector("#count");
@@ -692,11 +703,11 @@ const store = {
       );
     };
   },
-  logListeners: function () {
-    console.log(" listeners ", this.listeners);
-  },
 };
 
+// sub provides a mechanism for:
+// 1. listening
+// 2. unsubscribing
 const unsubscribe = store.subscribe(() => {
   renderCounter(store.state);
 });
@@ -708,82 +719,86 @@ store.subscribe(() => {
 
 setInterval(() => {
   store.dispatch(store.state + 1);
-  store.logListeners();
 }, 1000);
 ```
 
-Add the unsub to the click listener
+Add the unsub to the click listener.
 
 ```js
-const countEl = document.querySelector("#count");
-
-const renderCounter = (count) => {
-  const html = `<h3>The count is ${count}</h3>`;
-  countEl.innerHTML = html;
-};
-
 countEl.addEventListener("click", () => {
   unsubscribe();
 });
-
-const store = {
-  state: 0,
-  listeners: [],
-  dispatch: function (newState) {
-    this.state = newState;
-    this.listeners.forEach((listener) => {
-      listener();
-    });
-  },
-  subscribe: function (listener) {
-    this.listeners.push(listener);
-    return () => {
-      this.listeners = this.listeners.filter(
-        (_listener) => _listener !== listener
-      );
-    };
-  },
-};
-
-const unsubscribe = store.subscribe(() => {
-  renderCounter(store.state);
-});
-
-store.subscribe(() => {
-  console.log(" the store has changed ");
-});
-
-setInterval(() => {
-  store.dispatch(store.state + 1);
-}, 1000);
 ```
 
-Note the use of 'this' in the unsub function.
+Click to unsubscribe and note the console still runs while the #count div does not change.
 
-We have closure here so the 'this' points to the 'this' in the object when it is returned.
+## Aside
 
-Try:
+Note the use of 'this' in the unsub function:
+
+```js
+subscribe: function (listener) {
+  this.listeners.push(listener);
+  return () => {
+    this.listeners = this.listeners.filter(
+      (_listener) => _listener !== listener
+    );
+  };
+},
+```
+
+We are using closure here so the 'this' points to the 'this' in the object when it is returned.
+
+Try using an arrow function:
 
 ```js
 dispatch: (newState) => {
     this.state = newState;
-    this.listeners.forEach((listener) => {
-      listener();
-    });
-  },
+    ...
 ```
+
+And note the error.
 
 Rollback and try:
 
 ```js
+// return () => {
+//   this.listeners = this.listeners.filter(
+//     (_listener) => _listener !== listener
+//   );
+// };
 return function () {
   this.listeners = this.listeners.filter((_listener) => _listener !== listener);
 };
 ```
 
+The code is identical except we are not using an arrow function.
+
+Click to unsubscribe and note the error.
+
+If we return a non arrow function the this is not pointing at the original location.
+
+[See MDN](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Functions/Arrow_functions)
+
+```js
+var obj = {
+  // does not create a new scope
+  i: 10,
+  b: () => {
+    return this.i, this;
+  },
+  c: function () {
+    return this.i, this;
+  },
+};
+
+obj.b(); //?
+obj.c(); //?
+```
+
 ## Redux
 
-https://cdnjs.com/ - full version
+https://cdnjs.com/ - get the full version so you can see errors
 
 ```html
 <script
@@ -844,6 +859,16 @@ const store = Redux.createStore((state = 0, action) => {
 });
 ```
 
+The store creates state and receives an action.
+
+```js
+if (action.type === "INC") {
+  return (state = state + 1);
+}
+...
+store.dispatch({ type: "INC" });
+```
+
 ```js
 const countEl = document.querySelector("#count");
 
@@ -876,7 +901,7 @@ setInterval(() => {
 }, 1000);
 ```
 
-Removed code. We are only responsible for describing how the store is gong to change based on the action type.
+Removed code - we are only responsible for describing how the store is gong to change based on the action type.
 
 ```js
 const unsubscribe = store.subscribe(() => {
@@ -910,9 +935,11 @@ body {
 
 nav {
   display: flex;
-  align-items: stretch;
+  justify-content: space-around;
 }
 ```
+
+Users:
 
 ```js
 import React from "react";
@@ -945,7 +972,7 @@ export default Nav;
 ```
 
 ```js
-import Users from "./Users";
+import Nav from "./Nav";
 import Users from "./Users";
 ...
   return (
@@ -962,7 +989,7 @@ Decouples state from App and from components.
 
 App is responsible for rendering child components but state is in a separate object - a store with state.
 
-All components have the aility to
+All components have the ability to
 
 - publish = dispatch to change the state
 - subscribe to state in the store so they can update when state does
@@ -1078,7 +1105,7 @@ return (
 );
 ```
 
-User:
+Users:
 
 ```js
 import React from "react";
@@ -1097,6 +1124,8 @@ const Users = ({ users }) => {
 const mapStateToProps = (state) => ({ users: state.users });
 export default connect(mapStateToProps)(Users);
 ```
+
+App:
 
 ```js
 return (
@@ -1270,6 +1299,12 @@ app.post("/api/users", async (req, res, next) => {
     next(ex);
   }
 });
+...
+User.createRandomUser = function () {
+  return User.create({
+    name: `${Math.random()} - user`,
+  });
+};
 ```
 
 Nav:

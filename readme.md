@@ -527,25 +527,27 @@ Push to Github and create a Heroku account.
 
 ### PubSub
 
+In a new folder index.html:
+
 ```html
 <html>
   <head></head>
   <body>
-    <h1>Users</h1>
-    <div id="root"></div>
     <h2>Counter</h2>
     <div id="count"></div>
+    <script>
+      const renderCounter = (count) => {
+        const html = `<h3>The count is ${count}</h3>`;
+        document.querySelector("#count").innerHTML = html;
+      };
+      let count = 0;
+      renderCounter(count);
+    </script>
   </body>
-  <script>
-    const renderCounter = (count) => {
-      const html = `<h3>The count is ${count}</h3>`;
-      document.querySelector("#count").innerHTML = html;
-    };
-    let count = 0;
-    renderCounter(count);
-  </script>
 </html>
 ```
+
+Add an interval (browser API, see also setTimeout):
 
 ```js
 const renderCounter = (count) => {
@@ -579,7 +581,7 @@ renderCounter = (count) => {
 // NEW
 const store = {
   state: 0,
-  listeners: [],
+  // listeners: [],
   dispatch: function (newState) {
     this.state = newState;
   },
@@ -776,9 +778,9 @@ The code is identical except we are not using an arrow function.
 
 Click to unsubscribe and note the error.
 
-If we return a non arrow function the this is not pointing at the original location.
+If we return a non arrow function the `this` is not pointing at the original location.
 
-[See MDN](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Functions/Arrow_functions)
+[See MDN](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Functions/Arrow_functions) and [the samples here](https://www.w3schools.com/Js/js_arrow_function.asp)
 
 ```js
 var obj = {
@@ -807,6 +809,8 @@ https://cdnjs.com/ - get the full version so you can see errors
   crossorigin="anonymous"
 ></script>
 ```
+
+Test installation:
 
 `console.log(" ", Redux);`
 
@@ -901,7 +905,7 @@ setInterval(() => {
 }, 1000);
 ```
 
-Removed code - we are only responsible for describing how the store is gong to change based on the action type.
+Removed code - we are only responsible for describing how the store is going to change based on the action type.
 
 ```js
 const unsubscribe = store.subscribe(() => {
@@ -910,6 +914,8 @@ const unsubscribe = store.subscribe(() => {
 ```
 
 ## React
+
+Edit index.js:
 
 ```js
 return (
@@ -929,7 +935,7 @@ return (
 
 ```css
 body {
-  font: sans-serif;
+  font-family: sans-serif;
   font-size: 1.5rem;
 }
 
@@ -955,6 +961,8 @@ const Users = ({ users }) => {
 };
 export default Users;
 ```
+
+Create Nav.js:
 
 ```js
 import React from "react";
@@ -994,18 +1002,19 @@ All components have the ability to
 - publish = dispatch to change the state
 - subscribe to state in the store so they can update when state does
 
+React has this ability natively without using Redux - [context](https://reactjs.org/docs/context.html). The two are very similar. Redux is often prefered for larger projects.
+
 ```js
 npm i --save-dev redux react-redux
 ```
 
-store.js:
+Create store.js:
 
 ```js
 import { createStore } from "redux";
 
 const initialState = {
   users: ["Harpo", "Groucho", "Chico", "Zeppo"],
-  loading: true,
 };
 
 const store = createStore((state = initialState) => {

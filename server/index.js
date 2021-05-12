@@ -18,6 +18,14 @@ app.get("/api/users", async (req, res, next) => {
   }
 });
 
+app.post("/api/users", async (req, res, next) => {
+  try {
+    res.send(await User.createRandomUser());
+  } catch (ex) {
+    next(ex);
+  }
+});
+
 const init = async () => {
   try {
     await syncAndSeed();
@@ -37,6 +45,13 @@ const conn = new Sequelize(
 const User = conn.define("user", {
   name: STRING,
 });
+
+User.createRandomUser = function () {
+  return User.create({
+    name: `${Math.random()} - user`,
+  });
+};
+
 const syncAndSeed = async () => {
   await conn.sync({ force: true });
   await Promise.all([

@@ -1,0 +1,44 @@
+<html>
+  <head></head>
+  <body>
+    <h2>Counter</h2>
+    <div id="count"></div>
+    <script
+      src="https://cdnjs.cloudflare.com/ajax/libs/redux/4.1.0/redux.js"
+      integrity="sha512-tqb5l5obiKEPVwTQ5J8QJ1qYaLt+uoXe1tbMwQWl6gFCTJ5OMgulwIb3l2Lu7uBqdlzRf5yBOAuLL4+GkqbPPw=="
+      crossorigin="anonymous"
+    ></script>
+
+    <script>
+      const countEl = document.querySelector("#count");
+
+      const renderCounter = (count) => {
+        const html = `<h3>The count is ${count}</h3>`;
+        countEl.innerHTML = html;
+      };
+
+      countEl.addEventListener("click", () => {
+        unsubscribe();
+      });
+
+      const store = Redux.createStore((state = 0, action) => {
+        if (action.type === "INC") {
+          return (state = state + 1);
+        }
+        return state;
+      });
+
+      const unsubscribe = store.subscribe(() => {
+        renderCounter(store.getState());
+      });
+
+      store.subscribe(() => {
+        console.log("the store has changed");
+      });
+
+      setInterval(() => {
+        store.dispatch({ type: "INC" });
+      }, 1000);
+    </script>
+  </body>
+</html>

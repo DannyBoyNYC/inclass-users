@@ -2,35 +2,14 @@ import React from "react";
 import { render } from "react-dom";
 
 import "./styles.css";
-import cat from "./cat.jpg";
+import App from "./App";
 
-const App = () => {
-  const [users, setUsers] = React.useState([]);
-  const [loading, setLoading] = React.useState(true);
+import { Provider } from "react-redux";
+import store from "./store";
 
-  React.useEffect(() => {
-    fetch("/api/users")
-      .then((response) => response.json())
-      .then((data) => {
-        setUsers(data);
-        setLoading(false);
-      });
-  }, []);
-
-  if (loading) {
-    return <h3>Loading...</h3>;
-  }
-
-  return (
-    <>
-      <img style={{ maxWidth: "320px" }} src={cat} alt="funny cat" />
-      <ul>
-        {users.map((user) => {
-          return <li key={user.id}>{user.name}</li>;
-        })}
-      </ul>
-    </>
-  );
-};
-
-render(<App />, document.querySelector("#root"));
+render(
+  <Provider store={store}>
+    <App />
+  </Provider>,
+  document.querySelector("#root")
+);
